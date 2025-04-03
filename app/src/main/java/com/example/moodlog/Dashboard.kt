@@ -4,6 +4,7 @@ package com.example.moodlog
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
@@ -33,8 +34,8 @@ class Dashboard : AppCompatActivity() {
         }
 
         NotificationUtils.createNotificationChannel(this)
-
         ScheduleNotification.scheduleDailyReminder(this)
+
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 101)
