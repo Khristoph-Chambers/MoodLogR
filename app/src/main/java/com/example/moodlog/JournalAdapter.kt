@@ -1,13 +1,17 @@
 package com.example.moodlog
 
+import android.content.Context
 import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.content.ContextCompat.startActivity
 import androidx.recyclerview.widget.RecyclerView
 
-class JournalAdapter(private val journalList: List<JournalEntryModel>, private val onItemClick: (JournalEntryModel) -> Unit) :
+class JournalAdapter(
+    private val context: Context,
+    private val journalList: List<JournalEntryModel>, private val onItemClick: (JournalEntryModel) -> Unit) :
     RecyclerView.Adapter<JournalAdapter.JournalViewHolder>() {
 
     class JournalViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -28,6 +32,12 @@ class JournalAdapter(private val journalList: List<JournalEntryModel>, private v
 
         holder.itemView.setOnClickListener {
             onItemClick(journalEntry)
+
+            val intent = Intent(context, JournalDetail::class.java)
+            intent.putExtra("DATE", journalEntry.createdAt)
+            intent.putExtra("TEXT", journalEntry.journalText)
+            intent.putExtra("JOURNAL_ID", journalEntry.id)
+            context.startActivity(intent)
         }
 
     }

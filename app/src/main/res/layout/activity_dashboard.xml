@@ -48,6 +48,20 @@
         app:layout_constraintTop_toBottomOf="@+id/journalTitle"
         app:layout_constraintVertical_bias="0.02" />
 
+
+    <Button
+        android:id="@+id/logoutButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Log Out"
+        android:layout_gravity="center"
+        android:layout_marginTop="16dp"
+        android:layout_marginLeft="280dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/shadingView"
+        app:layout_constraintVertical_bias="0.02"/>
+
+
     <com.google.android.material.floatingactionbutton.FloatingActionButton
     android:id="@+id/createfaButton"
     android:layout_width="wrap_content"

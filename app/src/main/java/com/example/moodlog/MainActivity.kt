@@ -36,10 +36,6 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        NotificationUtils.createNotificationChannel(this)
-        ScheduleNotification.scheduleDailyReminder(this)
-
-        Toast.makeText(this, "Notification scheduled", Toast.LENGTH_SHORT).show()
 
         auth = FirebaseAuth.getInstance()
         db = FirebaseFirestore.getInstance()

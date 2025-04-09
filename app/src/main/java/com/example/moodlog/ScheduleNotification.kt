@@ -35,10 +35,10 @@ object ScheduleNotification {
         val calendar = Calendar.getInstance().apply {
 
             //add(Calendar.SECOND, 30)
-            //timeInMillis = System.currentTimeMillis()
-            //set(Calendar.HOUR_OF_DAY, 12)
-            //set(Calendar.MINUTE, 0)
-            //set(Calendar.SECOND, 0)
+            timeInMillis = System.currentTimeMillis()
+            set(Calendar.HOUR_OF_DAY, 12)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
         }
 
         Log.d("ScheduleNotification", "Scheduling notification for: ${calendar.time}")

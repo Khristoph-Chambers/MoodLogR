@@ -6,12 +6,14 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
 class JournalEntriesView2 : AppCompatActivity() {
 
     private lateinit var recyclerView: RecyclerView
+    private lateinit var returnButton: FloatingActionButton
     private lateinit var journalAdapter: JournalAdapter
     private val journalList = mutableListOf<JournalEntryModel>()
 
@@ -23,7 +25,15 @@ class JournalEntriesView2 : AppCompatActivity() {
         recyclerView.layoutManager = LinearLayoutManager(this)
 
         loadJournalEntries()
+
+        returnButton = findViewById(R.id.returnButton)
+
+        returnButton.setOnClickListener {
+            val intent = Intent(this, Dashboard::class.java)
+            startActivity(intent)
+        }
     }
+
 
 
 
@@ -44,12 +54,15 @@ class JournalEntriesView2 : AppCompatActivity() {
                 for (document in documents) {
                     val entryText = document.getString("journalText") ?: ""
                     val createdAt = document.getString("createdAt") ?: ""
-                    journalList.add(JournalEntryModel(entryText, createdAt))
+                    val journalId = document.id
+                    journalList.add(JournalEntryModel(entryText, createdAt, journalId))
+
                 }
-                journalAdapter = JournalAdapter(journalList) { journalEntry ->
-                    val intent = Intent(this, JournalDetail::class.java)
+                journalAdapter = JournalAdapter(this, journalList) { journalEntry ->
+                    val intent = Intent(this, Dashboard::class.java)
                     intent.putExtra("DATE", journalEntry.createdAt)
                     intent.putExtra("TEXT", journalEntry.journalText)
+                    intent.putExtra("JOURNAL_ID", journalEntry.id)
                     startActivity(intent)
                 }
                 recyclerView.adapter = journalAdapter

@@ -21,6 +21,7 @@ class Dashboard : AppCompatActivity() {
     private lateinit var journalDisplay: TextView
     private lateinit var createfaButton: FloatingActionButton
     private lateinit var viewEntriesButton: Button
+    private lateinit var logoutButton: Button
     private val db = FirebaseFirestore.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,12 +44,23 @@ class Dashboard : AppCompatActivity() {
 
 
 
-        Toast.makeText(this, "Notification scheduled", Toast.LENGTH_SHORT).show()
+        //Toast.makeText(this, "Notification scheduled", Toast.LENGTH_SHORT).show()
 
 
         journalDisplay = findViewById(R.id.journalDisplay)
         createfaButton = findViewById(R.id.createfaButton)
         viewEntriesButton = findViewById(R.id.viewEntriesButton)
+        logoutButton = findViewById(R.id.logoutButton)
+
+
+        logoutButton.setOnClickListener {
+            FirebaseAuth.getInstance().signOut()
+            val intent = Intent(this, MainActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+            finish()
+            Toast.makeText(this, "Signed out", Toast.LENGTH_SHORT).show()
+        }
 
         val viewEntriesButton: Button = findViewById(R.id.viewEntriesButton)
 
@@ -89,11 +101,6 @@ class Dashboard : AppCompatActivity() {
             .addOnFailureListener {
                 Toast.makeText(this, "Error loading entries", Toast.LENGTH_SHORT).show()
             }
-
-
-
-
-
 
     }
 }
