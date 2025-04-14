@@ -6,23 +6,37 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
+import android.widget.CalendarView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreSettings
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 class Dashboard : AppCompatActivity() {
 
+
+
+    private lateinit var userInfo: TextView
     private lateinit var journalDisplay: TextView
     private lateinit var createfaButton: FloatingActionButton
     private lateinit var viewEntriesButton: Button
     private lateinit var logoutButton: Button
+    private lateinit var dashboardDisplay: TextView
+    private lateinit var journalAdapter: JournalAdapter
     private val db = FirebaseFirestore.getInstance()
+    private val journalEntries = mutableListOf<JournalEntryModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,7 +65,33 @@ class Dashboard : AppCompatActivity() {
         createfaButton = findViewById(R.id.createfaButton)
         viewEntriesButton = findViewById(R.id.viewEntriesButton)
         logoutButton = findViewById(R.id.logoutButton)
+        userInfo = findViewById(R.id.userInfo)
 
+
+
+        val user = FirebaseAuth.getInstance().currentUser
+        if (user == null) {
+            Toast.makeText(this, "User not logged in", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val userId = user.uid
+
+
+        db.collection("users").document(userId).get()
+            .addOnSuccessListener { document ->
+                if (document != null && document.exists()) {
+                    val firstName = document.getString("firstName") ?: ""
+                    userInfo.text = "Hi, $firstName"
+                } else {
+                    userInfo.text = "Hi!"
+                }
+            }
+            .addOnFailureListener { exception ->
+                userInfo.text = "Hi!"
+                Toast.makeText(this, "Could not load user info", Toast.LENGTH_SHORT).show()
+                Log.e("Dashboard", "Error fetching user info", exception)
+            }
 
         logoutButton.setOnClickListener {
             FirebaseAuth.getInstance().signOut()
@@ -71,36 +111,69 @@ class Dashboard : AppCompatActivity() {
 
 
 
+        val calendarView = findViewById<CalendarView>(R.id.calendarView)
+
+        calendarView.setOnDateChangeListener { _, year, month, dayOfMonth ->
+            val calendar = Calendar.getInstance()
+            calendar.set(year, month, dayOfMonth)
+
+            val dateFormat = SimpleDateFormat("EEEE, MMMM dd, yyyy", Locale.getDefault())
+            val selectedDate = dateFormat.format(calendar.time)
+
+            val user = FirebaseAuth.getInstance().currentUser
+            if (user == null) {
+                Toast.makeText(this, "User not logged in", Toast.LENGTH_SHORT).show()
+                return@setOnDateChangeListener
+            }
+
+            val userId = user.uid
+            val db = FirebaseFirestore.getInstance()
+
+            loadJournalEntriesForDate(selectedDate)
+            setupRecyclerView()
+
+        }
+
+
         createfaButton.setOnClickListener {
             val intent = Intent(applicationContext, JournalEntry::class.java)
             startActivity(intent)
         }
 
-        val user = FirebaseAuth.getInstance().currentUser
-        if (user == null) {
-            Toast.makeText(this, "User not logged in", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        val userId = user.uid
-
-        db.collection("journalEntries")
-            .whereEqualTo("userId", userId)
-            .get()
-            .addOnSuccessListener { documents ->
-                val entries = StringBuilder()
-
-                for (document in documents) {
-                    val entryText = document.getString("journalText")
-                    val createdAt = document.getString("createdAt")
-                    entries.append("$createdAt\n$entryText\n\n")
-                }
-
-                journalDisplay.text = if (entries.isNotEmpty()) entries.toString() else "No Journal Entries Found."
-            }
-            .addOnFailureListener {
-                Toast.makeText(this, "Error loading entries", Toast.LENGTH_SHORT).show()
-            }
 
     }
+    private fun setupRecyclerView() {
+        val recyclerView = findViewById<RecyclerView>(R.id.rvDashboardJournalEntries)
+        recyclerView.layoutManager = LinearLayoutManager(this)
+        journalAdapter = JournalAdapter(this, journalEntries) { entry ->
+        }
+        recyclerView.adapter = journalAdapter
+    }
+
+
+    private fun loadJournalEntriesForDate(date: String) {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        FirebaseFirestore.getInstance().collection("journalEntries")
+            .whereEqualTo("userId", userId)
+            .whereEqualTo("createdAt", date)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                journalEntries.clear()
+                for (doc in snapshot) {
+                    val entry = JournalEntryModel(
+                        journalText = doc.getString("journalText") ?: "",
+                        createdAt = doc.getString("createdAt") ?: "",
+                        id = doc.id
+                    )
+                    journalEntries.add(entry)
+                }
+                journalAdapter.notifyDataSetChanged()
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "Failed to load entries", Toast.LENGTH_SHORT).show()
+
+            }
+    }
+
+
 }
